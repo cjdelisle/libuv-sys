@@ -20,7 +20,9 @@ maintenance = { status = "actively-developed" }
 bindgen = { version = "0.54", optional = true }
 cc = "1.0"
 pkg-config = "0.3.17"
+walkdir = "2"
 
 [features]
 default = ["bindgen"]
 no-bindings = []
+with-headers = []

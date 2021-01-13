@@ -3,10 +3,12 @@
 use std::env;
 use std::error;
 use std::fmt;
+use std::fs;
 use std::fs::OpenOptions;
 use std::io;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::ffi::OsStr;
 
 static LIBUV_VERSION: &str = "1.40.0";
 
@@ -355,6 +357,28 @@ fn generate_bindings<P: AsRef<Path>>(_include_path: &P) -> Result<()> {
     Ok(())
 }
 
+fn copy_headers<P: AsRef<Path>>(include_path: &P) {
+    println!("Copying include files...");
+    let incldir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("include");
+    fs::create_dir_all(&incldir).unwrap();
+    // Copy sources into build directory
+    // Skip .git because it's marked read-only and that causes problems re-building
+    for entry in walkdir::WalkDir::new(include_path)
+        .into_iter()
+        .filter_entry(|e| e.file_name() != OsStr::new(".git"))
+        .filter_map(std::result::Result::ok)
+    {
+        let outpath = incldir.join(entry.path());
+        if let Err(e) = if entry.file_type().is_dir() {
+            fs::create_dir_all(outpath)
+        } else {
+            fs::copy(entry.path(), outpath).map(|_| ())
+        } {
+            panic!("Failed to copy sources into build directory: {}", e);
+        }
+    }
+}
+
 fn main() {
     let source_path = PathBuf::from("libuv");
     let mut include_path = source_path.join("include");
@@ -372,5 +396,10 @@ fn main() {
 
     // generate bindings
     generate_bindings(&include_path).unwrap();
+
+    if cfg!(feature = "with-headers") {
+        copy_headers(&include_path);
+    }
+
     println!("cargo:include={}", include_path.to_string_lossy());
 }
