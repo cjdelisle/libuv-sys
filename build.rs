@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use std::env;
 use std::error;
 use std::fmt;
@@ -298,6 +300,7 @@ fn build<P: AsRef<Path>>(source_path: &P) -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(feature = "no-bindings"))]
 fn generate_bindings<P: AsRef<Path>>(include_path: &P) -> Result<()> {
     println!("Generating bindings for libuv...");
 
@@ -344,6 +347,11 @@ fn generate_bindings<P: AsRef<Path>>(include_path: &P) -> Result<()> {
     file.write(output.as_bytes())
         .map_err(|e| Error::PathError(filename.to_string_lossy().into(), e))?;
 
+    Ok(())
+}
+
+#[cfg(feature = "no-bindings")]
+fn generate_bindings<P: AsRef<Path>>(_include_path: &P) -> Result<()> {
     Ok(())
 }
 
