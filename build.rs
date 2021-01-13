@@ -138,7 +138,7 @@ fn build<P: AsRef<Path>>(source_path: &P) -> Result<()> {
         .file(src_path.join("uv-data-getter-setters.c"))
         .file(src_path.join("version.c"));
 
-    if cfg!(windows) {
+    if env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "windows" {
         println!("cargo:rustc-link-lib=psapi");
         println!("cargo:rustc-link-lib=user32");
         println!("cargo:rustc-link-lib=advapi32");
